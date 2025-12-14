@@ -31,9 +31,10 @@ local function SendChatMessage(message)
     end
 end
 
-local function ShowNotification()
-    StarterGui:SetCore("SendNotification", {
-        Title = "Lua Land",
-        Desc = "If someone says bad words, The word will be denied! We will make you safe!"
-}
-end)
+local StarterGui = game:GetService("StarterGui")
+
+StarterGui:SetCore("SendNotification", {
+    Title = "Lua Land",
+    Text = "This will copy everyone message! Also it has a duration and safe! If someone says any bad words the answer will be denied!",
+    Duration = 5
+})
