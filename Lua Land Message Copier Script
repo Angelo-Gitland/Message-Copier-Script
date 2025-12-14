@@ -1,0 +1,74 @@
+-- Credits to lua land
+
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+
+local localPlayer = Players.LocalPlayer
+local lastResponseTime = 0
+
+local badWords = {
+    "badword1","badword2","badwords3","badwords4",badwords5",badwords6",stupid","idiot","Nigga",fuck",Hate",Ugly"
+}
+
+local function containsBadWord(msg)
+    msg = msg:lower()
+    for _, word in ipairs(badWords) do
+        if string.find(msg, word) then
+            return true
+        end
+    end
+    return false
+end
+
+local function SendChatMessage(message)
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local channel = TextChatService.TextChannels.RBXGeneral
+        channel:SendAsync(message)
+    else
+        ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+    end
+end
+
+local function ShowNotification()
+    StarterGui:SetCore("SendNotification", {
+        Title = "Lua Land",
+        Text = "This will copy everyone message! Also it has a duration and safe! If someone says any bad words the answer will be denied!",
+        Duration = 5
+    })
+end
+
+local function GenerateResponse(userMessage)
+    local reply = " " .. string.sub(userMessage, 1, 15)
+    if #reply > 20 then
+        reply = reply:sub(1,20)
+    end
+    return reply
+end
+
+local function onMessage(senderName, text)
+    if senderName == localPlayer.Name then return end
+    if containsBadWord(text) then return end
+    local now = tick()
+    if now - lastResponseTime < 3 then return end
+    local reply = GenerateResponse(text)
+    SendChatMessage(reply)
+    ShowNotification()
+    lastResponseTime = now
+end
+
+if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+    local channel = TextChatService.TextChannels.RBXGeneral
+    channel.OnIncomingMessage = function(message)
+        local sender = message.TextSource and message.TextSource.Name or "Unknown"
+        local text = message.Text
+        onMessage(sender, text)
+    end
+else
+    ReplicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(data)
+        local sender = data.FromSpeaker
+        local text = data.Message
+        onMessage(sender, text)
+    end)
+end
